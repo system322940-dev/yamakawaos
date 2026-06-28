@@ -216,11 +216,6 @@
             outline: none;
         }
 
-        .browser-content {
-            width: 100%;
-            height: 100%;
-        }
-
         .taskbar {
             position: absolute;
             bottom: 0;
@@ -336,7 +331,7 @@
                 <button id="browser-go">移動</button>
             </div>
             <div class="window-body" style="background: white;">
-                <iframe id="browser-iframe" class="browser-content" style="width: 100%; height: 100%; border: none;"></iframe>
+                <iframe id="browser-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
         </div>
 
@@ -379,9 +374,10 @@
         const sndShutdown = document.getElementById('snd-shutdown');
 
         const defaultUrl = "https://www.youtube.com/@YamakawaTeruki";
+        const proxyApi = "https://yamakawaos.system322940-dev.workers.dev/?url=";
 
         document.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
                 playAudio(sndClick);
             }
         });
@@ -431,7 +427,7 @@
                 url = 'https://' + url;
             }
             browserUrl.value = url;
-            browserIframe.src = url;
+            browserIframe.src = proxyApi + encodeURIComponent(url);
         }
 
         browserGo.addEventListener('click', () => {
