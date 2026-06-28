@@ -130,16 +130,14 @@
 
         .window {
             position: absolute;
-            top: 100px;
-            left: 100px;
-            width: 400px;
-            height: 300px;
             background: white;
             border-radius: 6px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-width: 200px;
+            min-height: 150px;
         }
 
         .window-header {
@@ -175,6 +173,7 @@
 
         .window-body {
             flex: 1;
+            position: relative;
         }
 
         .window-body textarea {
@@ -186,6 +185,32 @@
             font-size: 14px;
             outline: none;
             user-select: text;
+        }
+
+        .window-resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 15px;
+            height: 15px;
+            cursor: se-resize;
+            background: linear-gradient(135deg, transparent 70%, #999 70%);
+            z-index: 10;
+        }
+
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 5;
         }
 
         .browser-toolbar {
@@ -310,13 +335,14 @@
             </div>
         </div>
 
-        <div id="notepad-window" class="window hidden">
+        <div id="notepad-window" class="window hidden" style="width: 400px; height: 300px; top: 100px; left: 100px;">
             <div class="window-header">
                 <span class="window-title">メモ帳</span>
                 <button class="window-close" id="close-notepad">✕</button>
             </div>
             <div class="window-body">
                 <textarea id="notepad-text" placeholder="ここに文字を入力してください..."></textarea>
+                <div class="window-resize-handle"></div>
             </div>
         </div>
 
@@ -331,7 +357,11 @@
                 <button id="browser-go">移動</button>
             </div>
             <div class="window-body" style="background: white;">
-                <iframe id="browser-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+                <div class="iframe-container">
+                    <div class="iframe-overlay" id="browser-overlay"></div>
+                    <iframe id="browser-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+                <div class="window-resize-handle"></div>
             </div>
         </div>
 
@@ -365,6 +395,7 @@
         const browserGo = document.getElementById('browser-go');
         const browserBack = document.getElementById('browser-back');
         const browserIframe = document.getElementById('browser-iframe');
+        const browserOverlay = document.getElementById('browser-overlay');
         const startBtn = document.getElementById('start-btn');
         const startMenu = document.getElementById('start-menu');
         const shutdownBtn = document.getElementById('shutdown-btn');
@@ -376,6 +407,12 @@
         const defaultUrl = "https://www.youtube.com/@YamakawaTeruki";
         const proxyApi = "https://yamakawaos.system322940-dev.workers.dev/?url=";
 
+        let activeWindow = null;
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY, startLeft, startTop, startWidth, startHeight;
+        let zIndexCounter = 100;
+
         document.addEventListener('click', (e) => {
             if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
                 playAudio(sndClick);
@@ -386,6 +423,68 @@
             audioElement.currentTime = 0;
             audioElement.play().catch(err => console.log(err));
         }
+
+        function bringToFront(windowElement) {
+            zIndexCounter++;
+            windowElement.style.zIndex = zIndexCounter;
+        }
+
+        document.querySelectorAll('.window').forEach(win => {
+            win.addEventListener('mousedown', () => {
+                bringToFront(win);
+            });
+
+            const header = win.querySelector('.window-header');
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('window-close')) return;
+                isDragging = true;
+                activeWindow = win;
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = parseInt(window.getComputedStyle(win).left, 10);
+                startTop = parseInt(window.getComputedStyle(win).top, 10);
+                browserOverlay.style.display = 'block';
+                e.preventDefault();
+            });
+
+            const handle = win.querySelector('.window-resize-handle');
+            handle.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                activeWindow = win;
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseInt(window.getComputedStyle(win).width, 10);
+                startHeight = parseInt(window.getComputedStyle(win).height, 10);
+                browserOverlay.style.display = 'block';
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!activeWindow) return;
+
+            if (isDragging) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                activeWindow.style.left = (startLeft + dx) + 'px';
+                activeWindow.style.top = (startTop + dy) + 'px';
+            }
+
+            if (isResizing) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                activeWindow.style.width = (startWidth + dx) + 'px';
+                activeWindow.style.height = (startHeight + dy) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            isResizing = false;
+            activeWindow = null;
+            browserOverlay.style.display = 'none';
+        });
 
         loginBtn.addEventListener('click', () => {
             if (passwordInput.value === 'yamakawa') {
@@ -406,6 +505,7 @@
         notepadIcon.addEventListener('click', (e) => {
             e.stopPropagation();
             notepadWindow.classList.remove('hidden');
+            bringToFront(notepadWindow);
         });
 
         closeNotepad.addEventListener('click', () => {
@@ -415,7 +515,10 @@
         browserIcon.addEventListener('click', (e) => {
             e.stopPropagation();
             browserWindow.classList.remove('hidden');
-            loadUrl(defaultUrl);
+            bringToFront(browserWindow);
+            if (!browserIframe.src) {
+                loadUrl(defaultUrl);
+            }
         });
 
         closeBrowser.addEventListener('click', () => {
