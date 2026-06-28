@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>やまかわOS</title>
     <style>
         * {
@@ -11,12 +11,14 @@
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
+            -webkit-user-select: none;
         }
 
         body, html {
             width: 100%;
             height: 100%;
             overflow: hidden;
+            position: fixed;
         }
 
         .screen {
@@ -70,6 +72,8 @@
             border: none;
             border-radius: 4px;
             outline: none;
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         #login-btn {
@@ -138,11 +142,12 @@
             overflow: hidden;
             min-width: 200px;
             min-height: 150px;
+            touch-action: none;
         }
 
         .window-header {
             background: #f3f3f3;
-            padding: 8px 12px;
+            padding: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -159,10 +164,10 @@
         .window-close {
             background: none;
             border: none;
-            font-size: 14px;
+            font-size: 16px;
             cursor: pointer;
             color: #666;
-            padding: 2px 6px;
+            padding: 4px 8px;
         }
 
         .window-close:hover {
@@ -185,16 +190,17 @@
             font-size: 14px;
             outline: none;
             user-select: text;
+            -webkit-user-select: text;
         }
 
         .window-resize-handle {
             position: absolute;
             right: 0;
             bottom: 0;
-            width: 15px;
-            height: 15px;
+            width: 24px;
+            height: 24px;
             cursor: se-resize;
-            background: linear-gradient(135deg, transparent 70%, #999 70%);
+            background: linear-gradient(135deg, transparent 60%, #999 60%);
             z-index: 10;
         }
 
@@ -222,7 +228,7 @@
         }
 
         .browser-toolbar button {
-            padding: 4px 10px;
+            padding: 6px 12px;
             background: #fff;
             border: 1px solid #ccc;
             border-radius: 3px;
@@ -239,6 +245,8 @@
             border: 1px solid #ccc;
             border-radius: 3px;
             outline: none;
+            user-select: text;
+            -webkit-user-select: text;
         }
 
         .taskbar {
@@ -335,7 +343,7 @@
             </div>
         </div>
 
-        <div id="notepad-window" class="window hidden" style="width: 400px; height: 300px; top: 100px; left: 100px;">
+        <div id="notepad-window" class="window hidden" style="width: 300px; height: 250px; top: 80px; left: 20px;">
             <div class="window-header">
                 <span class="window-title">メモ帳</span>
                 <button class="window-close" id="close-notepad">✕</button>
@@ -346,7 +354,7 @@
             </div>
         </div>
 
-        <div id="browser-window" class="window hidden" style="width: 700px; height: 500px; top: 50px; left: 150px;">
+        <div id="browser-window" class="window hidden" style="width: 340px; height: 400px; top: 40px; left: 40px;">
             <div class="window-header">
                 <span class="window-title">やまかわブラウザ</span>
                 <button class="window-close" id="close-browser">✕</button>
@@ -429,62 +437,83 @@
             windowElement.style.zIndex = zIndexCounter;
         }
 
+        function getEventX(e) {
+            return e.touches ? e.touches[0].clientX : e.clientX;
+        }
+
+        function getEventY(e) {
+            return e.touches ? e.touches[0].clientY : e.clientY;
+        }
+
         document.querySelectorAll('.window').forEach(win => {
-            win.addEventListener('mousedown', () => {
-                bringToFront(win);
-            });
+            win.addEventListener('mousedown', () => bringToFront(win));
+            win.addEventListener('touchstart', () => bringToFront(win));
 
             const header = win.querySelector('.window-header');
-            header.addEventListener('mousedown', (e) => {
-                if (e.target.classList.contains('window-close')) return;
+            
+            const onDragStart = (e) => {
+                if (e.target.classList.contains('window-close') || e.target.tagName === 'BUTTON') return;
                 isDragging = true;
                 activeWindow = win;
-                startX = e.clientX;
-                startY = e.clientY;
-                startLeft = parseInt(window.getComputedStyle(win).left, 10);
-                startTop = parseInt(window.getComputedStyle(win).top, 10);
+                startX = getEventX(e);
+                startY = getEventY(e);
+                startLeft = parseInt(window.getComputedStyle(win).left, 10) || 0;
+                startTop = parseInt(window.getComputedStyle(win).top, 10) || 0;
                 browserOverlay.style.display = 'block';
-                e.preventDefault();
-            });
+                if (!e.touches) e.preventDefault();
+            };
+            header.addEventListener('mousedown', onDragStart);
+            header.addEventListener('touchstart', onDragStart, {passive: true});
 
             const handle = win.querySelector('.window-resize-handle');
-            handle.addEventListener('mousedown', (e) => {
+            const onResizeStart = (e) => {
                 isResizing = true;
                 activeWindow = win;
-                startX = e.clientX;
-                startY = e.clientY;
+                startX = getEventX(e);
+                startY = getEventY(e);
                 startWidth = parseInt(window.getComputedStyle(win).width, 10);
                 startHeight = parseInt(window.getComputedStyle(win).height, 10);
                 browserOverlay.style.display = 'block';
-                e.preventDefault();
+                if (!e.touches) e.preventDefault();
                 e.stopPropagation();
-            });
+            };
+            handle.addEventListener('mousedown', onResizeStart);
+            handle.addEventListener('touchstart', onResizeStart, {passive: true});
         });
 
-        document.addEventListener('mousemove', (e) => {
+        const onMove = (e) => {
             if (!activeWindow) return;
 
+            const currentX = getEventX(e);
+            const currentY = getEventY(e);
+
             if (isDragging) {
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
+                const dx = currentX - startX;
+                const dy = currentY - startY;
                 activeWindow.style.left = (startLeft + dx) + 'px';
                 activeWindow.style.top = (startTop + dy) + 'px';
             }
 
             if (isResizing) {
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                activeWindow.style.width = (startWidth + dx) + 'px';
-                activeWindow.style.height = (startHeight + dy) + 'px';
+                const dx = currentX - startX;
+                const dy = currentY - startY;
+                activeWindow.style.width = Math.max(200, startWidth + dx) + 'px';
+                activeWindow.style.height = Math.max(150, startHeight + dy) + 'px';
             }
-        });
+        };
 
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('touchmove', onMove, {passive: false});
+
+        const onEnd = () => {
             isDragging = false;
             isResizing = false;
             activeWindow = null;
             browserOverlay.style.display = 'none';
-        });
+        };
+
+        document.addEventListener('mouseup', onEnd);
+        document.addEventListener('touchend', onEnd);
 
         loginBtn.addEventListener('click', () => {
             if (passwordInput.value === 'yamakawa') {
