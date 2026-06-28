@@ -110,7 +110,7 @@
         }
 
         .icon {
-            width: 70px;
+            width: 75px;
             text-align: center;
             color: white;
             cursor: pointer;
@@ -249,6 +249,66 @@
             -webkit-user-select: text;
         }
 
+        .player-container {
+            padding: 15px;
+            background: #f9f9f9;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .player-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .player-file {
+            font-size: 11px;
+            color: #888;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .player-btn {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .player-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .player-vol {
+            width: 60px;
+            cursor: pointer;
+        }
+
         .taskbar {
             position: absolute;
             bottom: 0;
@@ -341,6 +401,10 @@
                 <div class="icon-img">🌐</div>
                 <div class="icon-text">ブラウザ</div>
             </div>
+            <div class="icon" id="player-icon">
+                <div class="icon-img">🎵</div>
+                <div class="icon-text">音源再生</div>
+            </div>
         </div>
 
         <div id="notepad-window" class="window hidden" style="width: 300px; height: 250px; top: 80px; left: 20px;">
@@ -373,12 +437,72 @@
             </div>
         </div>
 
+        <div id="player-window" class="window hidden" style="width: 330px; height: 340px; top: 120px; left: 30px;">
+            <div class="window-header">
+                <span class="window-title">サウンドプレーヤー</span>
+                <button class="window-close" id="close-player">✕</button>
+            </div>
+            <div class="window-body">
+                <div class="player-container">
+                    <div class="player-row">
+                        <div class="player-info">
+                            <span class="player-name">起動音</span>
+                            <span class="player-file">startup.mp3</span>
+                        </div>
+                        <div class="player-controls">
+                            <button class="player-btn" onclick="controlAudio('snd-startup', 'play')">▶</button>
+                            <button class="player-btn" onclick="controlAudio('snd-startup', 'stop')">■</button>
+                            <input type="range" class="player-vol" min="0" max="1" step="0.1" value="1" oninput="setAudioVolume('snd-startup', this.value)">
+                        </div>
+                    </div>
+                    <div class="player-row">
+                        <div class="player-info">
+                            <span class="player-name">クリック音</span>
+                            <span class="player-file">click.mp3</span>
+                        </div>
+                        <div class="player-controls">
+                            <button class="player-btn" onclick="controlAudio('snd-click', 'play')">▶</button>
+                            <button class="player-btn" onclick="controlAudio('snd-click', 'stop')">■</button>
+                            <input type="range" class="player-vol" min="0" max="1" step="0.1" value="1" oninput="setAudioVolume('snd-click', this.value)">
+                        </div>
+                    </div>
+                    <div class="player-row">
+                        <div class="player-info">
+                            <span class="player-name">エラー音</span>
+                            <span class="player-file">error.mp3</span>
+                        </div>
+                        <div class="player-controls">
+                            <button class="player-btn" onclick="controlAudio('snd-error', 'play')">▶</button>
+                            <button class="player-btn" onclick="controlAudio('snd-error', 'stop')">■</button>
+                            <input type="range" class="player-vol" min="0" max="1" step="0.1" value="1" oninput="setAudioVolume('snd-error', this.value)">
+                        </div>
+                    </div>
+                    <div class="player-row">
+                        <div class="player-info">
+                            <span class="player-name">終了音</span>
+                            <span class="player-file">shutdown.mp3</span>
+                        </div>
+                        <div class="player-controls">
+                            <button class="player-btn" onclick="controlAudio('snd-shutdown', 'play')">▶</button>
+                            <button class="player-btn" onclick="controlAudio('snd-shutdown', 'stop')">■</button>
+                            <input type="range" class="player-vol" min="0" max="1" step="0.1" value="1" oninput="setAudioVolume('snd-shutdown', this.value)">
+                        </div>
+                    </div>
+                </div>
+                <div class="window-resize-handle"></div>
+            </div>
+        </div>
+
         <div class="taskbar">
             <button id="start-btn">スタート</button>
             <div class="taskbar-time" id="taskbar-time">00:00</div>
         </div>
 
         <div id="start-menu" class="start-menu hidden">
+            <button id="menu-notepad">📝 メモ帳</button>
+            <button id="menu-browser">🌐 ブラウザ</button>
+            <button id="menu-player">🎵 サウンドプレーヤー</button>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 5px 0;">
             <button id="shutdown-btn">🔴 シャットダウン</button>
         </div>
     </div>
@@ -386,6 +510,7 @@
     <audio id="snd-startup" src="./startup.mp3"></audio>
     <audio id="snd-click" src="./click.mp3"></audio>
     <audio id="snd-shutdown" src="./shutdown.mp3"></audio>
+    <audio id="snd-error" src="./error.mp3"></audio>
 
     <script>
         const loginScreen = document.getElementById('login-screen');
@@ -393,9 +518,11 @@
         const passwordInput = document.getElementById('password');
         const loginBtn = document.getElementById('login-btn');
         const loginError = document.getElementById('login-error');
+        
         const notepadIcon = document.getElementById('notepad-icon');
         const notepadWindow = document.getElementById('notepad-window');
         const closeNotepad = document.getElementById('close-notepad');
+        
         const browserIcon = document.getElementById('browser-icon');
         const browserWindow = document.getElementById('browser-window');
         const closeBrowser = document.getElementById('close-browser');
@@ -404,13 +531,24 @@
         const browserBack = document.getElementById('browser-back');
         const browserIframe = document.getElementById('browser-iframe');
         const browserOverlay = document.getElementById('browser-overlay');
+
+        const playerIcon = document.getElementById('player-icon');
+        const playerWindow = document.getElementById('player-window');
+        const closePlayer = document.getElementById('close-player');
+        
         const startBtn = document.getElementById('start-btn');
         const startMenu = document.getElementById('start-menu');
         const shutdownBtn = document.getElementById('shutdown-btn');
+        const menuNotepad = document.getElementById('menu-notepad');
+        const menuBrowser = document.getElementById('menu-browser');
+        const menuPlayer = document.getElementById('menu-player');
+        
         const timeDisplay = document.getElementById('taskbar-time');
+        
         const sndStartup = document.getElementById('snd-startup');
         const sndClick = document.getElementById('snd-click');
         const sndShutdown = document.getElementById('snd-shutdown');
+        const sndError = document.getElementById('snd-error');
 
         const defaultUrl = "https://www.youtube.com/@YamakawaTeruki";
         const proxyApi = "https://yamakawaos.system322940-dev.workers.dev/?url=";
@@ -422,7 +560,7 @@
         let zIndexCounter = 100;
 
         document.addEventListener('click', (e) => {
-            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON') {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'BUTTON' && !e.target.classList.contains('player-vol')) {
                 playAudio(sndClick);
             }
         });
@@ -430,6 +568,22 @@
         function playAudio(audioElement) {
             audioElement.currentTime = 0;
             audioElement.play().catch(err => console.log(err));
+        }
+
+        function controlAudio(id, action) {
+            const audio = document.getElementById(id);
+            if (action === 'play') {
+                audio.currentTime = 0;
+                audio.play().catch(err => console.log(err));
+            } else if (action === 'stop') {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }
+
+        function setAudioVolume(id, vol) {
+            const audio = document.getElementById(id);
+            audio.volume = vol;
         }
 
         function bringToFront(windowElement) {
@@ -521,6 +675,7 @@
                 loginScreen.classList.add('hidden');
                 desktopScreen.classList.remove('hidden');
             } else {
+                playAudio(sndError);
                 loginError.textContent = 'パスワードが間違っています。';
             }
         });
@@ -536,22 +691,37 @@
             notepadWindow.classList.remove('hidden');
             bringToFront(notepadWindow);
         });
-
-        closeNotepad.addEventListener('click', () => {
-            notepadWindow.classList.add('hidden');
+        closeNotepad.addEventListener('click', () => notepadWindow.classList.add('hidden'));
+        menuNotepad.addEventListener('click', () => {
+            notepadWindow.classList.remove('hidden');
+            bringToFront(notepadWindow);
+            startMenu.classList.add('hidden');
         });
 
         browserIcon.addEventListener('click', (e) => {
             e.stopPropagation();
             browserWindow.classList.remove('hidden');
             bringToFront(browserWindow);
-            if (!browserIframe.src) {
-                loadUrl(defaultUrl);
-            }
+            if (!browserIframe.src) loadUrl(defaultUrl);
+        });
+        closeBrowser.addEventListener('click', () => browserWindow.classList.add('hidden'));
+        menuBrowser.addEventListener('click', () => {
+            browserWindow.classList.remove('hidden');
+            bringToFront(browserWindow);
+            if (!browserIframe.src) loadUrl(defaultUrl);
+            startMenu.classList.add('hidden');
         });
 
-        closeBrowser.addEventListener('click', () => {
-            browserWindow.classList.add('hidden');
+        playerIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            playerWindow.classList.remove('hidden');
+            bringToFront(playerWindow);
+        });
+        closePlayer.addEventListener('click', () => playerWindow.classList.add('hidden'));
+        menuPlayer.addEventListener('click', () => {
+            playerWindow.classList.remove('hidden');
+            bringToFront(playerWindow);
+            startMenu.classList.add('hidden');
         });
 
         function loadUrl(url) {
@@ -562,28 +732,18 @@
             browserIframe.src = proxyApi + encodeURIComponent(url);
         }
 
-        browserGo.addEventListener('click', () => {
-            loadUrl(browserUrl.value.trim());
-        });
-
+        browserGo.addEventListener('click', () => loadUrl(browserUrl.value.trim()));
         browserUrl.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                loadUrl(browserUrl.value.trim());
-            }
+            if (e.key === 'Enter') loadUrl(browserUrl.value.trim());
         });
-
-        browserBack.addEventListener('click', () => {
-            loadUrl(defaultUrl);
-        });
+        browserBack.addEventListener('click', () => loadUrl(defaultUrl));
 
         startBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             startMenu.classList.toggle('hidden');
         });
 
-        desktopScreen.addEventListener('click', () => {
-            startMenu.classList.add('hidden');
-        });
+        desktopScreen.addEventListener('click', () => startMenu.classList.add('hidden'));
 
         shutdownBtn.addEventListener('click', () => {
             playAudio(sndShutdown);
@@ -594,6 +754,7 @@
                 desktopScreen.classList.add('hidden');
                 notepadWindow.classList.add('hidden');
                 browserWindow.classList.add('hidden');
+                playerWindow.classList.add('hidden');
                 loginScreen.classList.remove('hidden');
             }, 2000);
         });
