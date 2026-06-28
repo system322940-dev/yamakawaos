@@ -188,6 +188,39 @@
             user-select: text;
         }
 
+        .browser-toolbar {
+            display: flex;
+            background: #f3f3f3;
+            padding: 5px;
+            gap: 5px;
+            border-bottom: 1px solid #dcdcdc;
+        }
+
+        .browser-toolbar button {
+            padding: 4px 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .browser-toolbar button:hover {
+            background: #f0f0f0;
+        }
+
+        .browser-toolbar input {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .browser-content {
+            width: 100%;
+            height: 100%;
+        }
+
         .taskbar {
             position: absolute;
             bottom: 0;
@@ -276,6 +309,10 @@
                 <div class="icon-img">📝</div>
                 <div class="icon-text">メモ帳</div>
             </div>
+            <div class="icon" id="browser-icon">
+                <div class="icon-img">🌐</div>
+                <div class="icon-text">ブラウザ</div>
+            </div>
         </div>
 
         <div id="notepad-window" class="window hidden">
@@ -285,6 +322,21 @@
             </div>
             <div class="window-body">
                 <textarea id="notepad-text" placeholder="ここに文字を入力してください..."></textarea>
+            </div>
+        </div>
+
+        <div id="browser-window" class="window hidden" style="width: 700px; height: 500px; top: 50px; left: 150px;">
+            <div class="window-header">
+                <span class="window-title">やまかわブラウザ</span>
+                <button class="window-close" id="close-browser">✕</button>
+            </div>
+            <div class="browser-toolbar">
+                <button id="browser-back">←</button>
+                <input type="text" id="browser-url" value="https://www.youtube.com/@YamakawaTeruki">
+                <button id="browser-go">移動</button>
+            </div>
+            <div class="window-body" style="background: white;">
+                <iframe id="browser-iframe" class="browser-content" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
         </div>
 
@@ -311,6 +363,13 @@
         const notepadIcon = document.getElementById('notepad-icon');
         const notepadWindow = document.getElementById('notepad-window');
         const closeNotepad = document.getElementById('close-notepad');
+        const browserIcon = document.getElementById('browser-icon');
+        const browserWindow = document.getElementById('browser-window');
+        const closeBrowser = document.getElementById('close-browser');
+        const browserUrl = document.getElementById('browser-url');
+        const browserGo = document.getElementById('browser-go');
+        const browserBack = document.getElementById('browser-back');
+        const browserIframe = document.getElementById('browser-iframe');
         const startBtn = document.getElementById('start-btn');
         const startMenu = document.getElementById('start-menu');
         const shutdownBtn = document.getElementById('shutdown-btn');
@@ -318,6 +377,8 @@
         const sndStartup = document.getElementById('snd-startup');
         const sndClick = document.getElementById('snd-click');
         const sndShutdown = document.getElementById('snd-shutdown');
+
+        const defaultUrl = "https://www.youtube.com/@YamakawaTeruki";
 
         document.addEventListener('click', (e) => {
             if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
@@ -355,6 +416,38 @@
             notepadWindow.classList.add('hidden');
         });
 
+        browserIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            browserWindow.classList.remove('hidden');
+            loadUrl(defaultUrl);
+        });
+
+        closeBrowser.addEventListener('click', () => {
+            browserWindow.classList.add('hidden');
+        });
+
+        function loadUrl(url) {
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            browserUrl.value = url;
+            browserIframe.src = url;
+        }
+
+        browserGo.addEventListener('click', () => {
+            loadUrl(browserUrl.value.trim());
+        });
+
+        browserUrl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loadUrl(browserUrl.value.trim());
+            }
+        });
+
+        browserBack.addEventListener('click', () => {
+            loadUrl(defaultUrl);
+        });
+
         startBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             startMenu.classList.toggle('hidden');
@@ -372,6 +465,7 @@
                 loginError.textContent = '';
                 desktopScreen.classList.add('hidden');
                 notepadWindow.classList.add('hidden');
+                browserWindow.classList.add('hidden');
                 loginScreen.classList.remove('hidden');
             }, 2000);
         });
