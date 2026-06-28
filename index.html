@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>やまかわOS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #login-screen {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+
+        .login-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 300px;
+        }
+
+        .login-box h2 {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        #login-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #0078d7;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #login-btn:hover {
+            background-color: #005a9e;
+        }
+
+        .error-msg {
+            color: #ff4d4d;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        #desktop-screen {
+            background: #0078d7;
+            background-image: radial-gradient(circle, #0084f1 0%, #005a9e 100%);
+        }
+
+        .desktop-icons {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .icon {
+            width: 70px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .icon-img {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .icon-text {
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .window {
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            width: 400px;
+            height: 300px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .window-header {
+            background: #f3f3f3;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dcdcdc;
+            cursor: move;
+        }
+
+        .window-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .window-close {
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            color: #666;
+            padding: 2px 6px;
+        }
+
+        .window-close:hover {
+            background: #e81123;
+            color: white;
+            border-radius: 3px;
+        }
+
+        .window-body {
+            flex: 1;
+        }
+
+        .window-body textarea {
+            width: 100%;
+            height: 100%;
+            border: none;
+            resize: none;
+            padding: 10px;
+            font-size: 14px;
+            outline: none;
+            user-select: text;
+        }
+
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(16, 16, 16, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 9999;
+        }
+
+        #start-btn {
+            background: #0078d7;
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #start-btn:hover {
+            background: #005a9e;
+        }
+
+        .taskbar-time {
+            color: white;
+            font-size: 14px;
+        }
+
+        .start-menu {
+            position: absolute;
+            bottom: 45px;
+            left: 5px;
+            width: 200px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 6px;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 9998;
+        }
+
+        .start-menu button {
+            width: 100%;
+            background: none;
+            border: none;
+            color: white;
+            text-align: left;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .start-menu button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen" class="screen">
+        <div class="login-box">
+            <h2>やまかわOS</h2>
+            <div class="input-group">
+                <label for="username">ユーザー名:</label>
+                <input type="text" id="username" value="user" readonly>
+            </div>
+            <div class="input-group">
+                <label for="password">パスワード:</label>
+                <input type="password" id="password" placeholder="パスワードを入力">
+            </div>
+            <button id="login-btn">ログイン</button>
+            <p id="login-error" class="error-msg"></p>
+        </div>
+    </div>
+
+    <div id="desktop-screen" class="screen hidden">
+        <div class="desktop-icons">
+            <div class="icon" id="notepad-icon">
+                <div class="icon-img">📝</div>
+                <div class="icon-text">メモ帳</div>
+            </div>
+        </div>
+
+        <div id="notepad-window" class="window hidden">
+            <div class="window-header">
+                <span class="window-title">メモ帳</span>
+                <button class="window-close" id="close-notepad">✕</button>
+            </div>
+            <div class="window-body">
+                <textarea id="notepad-text" placeholder="ここに文字を入力してください..."></textarea>
+            </div>
+        </div>
+
+        <div class="taskbar">
+            <button id="start-btn">スタート</button>
+            <div class="taskbar-time" id="taskbar-time">00:00</div>
+        </div>
+
+        <div id="start-menu" class="start-menu hidden">
+            <button id="shutdown-btn">🔴 シャットダウン</button>
+        </div>
+    </div>
+
+    <audio id="snd-startup" src="./startup.mp3"></audio>
+    <audio id="snd-click" src="./click.mp3"></audio>
+    <audio id="snd-shutdown" src="./shutdown.mp3"></audio>
+
+    <script>
+        const loginScreen = document.getElementById('login-screen');
+        const desktopScreen = document.getElementById('desktop-screen');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const notepadIcon = document.getElementById('notepad-icon');
+        const notepadWindow = document.getElementById('notepad-window');
+        const closeNotepad = document.getElementById('close-notepad');
+        const startBtn = document.getElementById('start-btn');
+        const startMenu = document.getElementById('start-menu');
+        const shutdownBtn = document.getElementById('shutdown-btn');
+        const timeDisplay = document.getElementById('taskbar-time');
+        const sndStartup = document.getElementById('snd-startup');
+        const sndClick = document.getElementById('snd-click');
+        const sndShutdown = document.getElementById('snd-shutdown');
+
+        document.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                playAudio(sndClick);
+            }
+        });
+
+        function playAudio(audioElement) {
+            audioElement.currentTime = 0;
+            audioElement.play().catch(err => console.log(err));
+        }
+
+        loginBtn.addEventListener('click', () => {
+            if (passwordInput.value === 'yamakawa') {
+                playAudio(sndStartup);
+                loginScreen.classList.add('hidden');
+                desktopScreen.classList.remove('hidden');
+            } else {
+                loginError.textContent = 'パスワードが間違っています。';
+            }
+        });
+
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                loginBtn.click();
+            }
+        });
+
+        notepadIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notepadWindow.classList.remove('hidden');
+        });
+
+        closeNotepad.addEventListener('click', () => {
+            notepadWindow.classList.add('hidden');
+        });
+
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startMenu.classList.toggle('hidden');
+        });
+
+        desktopScreen.addEventListener('click', () => {
+            startMenu.classList.add('hidden');
+        });
+
+        shutdownBtn.addEventListener('click', () => {
+            playAudio(sndShutdown);
+            startMenu.classList.add('hidden');
+            setTimeout(() => {
+                passwordInput.value = '';
+                loginError.textContent = '';
+                desktopScreen.classList.add('hidden');
+                notepadWindow.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+            }, 2000);
+        });
+
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            timeDisplay.textContent = `${hours}:${minutes}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>
