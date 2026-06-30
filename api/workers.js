@@ -11,10 +11,17 @@ export default {
     }
 
     const currentUrl = new URL(request.url);
-    const targetUrlStr = currentUrl.searchParams.get("url");
+    let targetUrlStr = currentUrl.searchParams.get("url");
 
     if (!targetUrlStr) {
-      return new Response("Error: 'url' parameter is required.", { status: 400 });
+      const pathAndSearch = currentUrl.pathname + currentUrl.search;
+      if (pathAndSearch.startsWith("//?url=")) {
+        targetUrlStr = decodeURIComponent(pathAndSearch.split("//?url=")[1]);
+      } else if (currentUrl.searchParams.has("bypass")) {
+        targetUrlStr = currentUrl.searchParams.get("bypass");
+      } else {
+        return new Response("Error: 'url' parameter is required.", { status: 400 });
+      }
     }
 
     try {
@@ -40,6 +47,14 @@ export default {
         const escapedOrigin = originDomain.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         const originRegex = new RegExp(escapedOrigin, 'g');
         text = text.replace(originRegex, `${currentUrl.origin}/?url=${originDomain}`);
+
+        const relativeRegex = /(href|src|action)=["'](\/[^"']*)["']/g;
+        text = text.replace(relativeRegex, (match, p1, p2) => {
+          if (p2.startsWith("//")) {
+            return `${p1}="${currentUrl.origin}/?url=https:${p2}"`;
+          }
+          return `${p1}="${currentUrl.origin}/?url=${originDomain}${p2}"`;
+        });
 
         if (contentType.includes("text/html")) {
           const baseTag = `<base href="${originDomain}/">`;
