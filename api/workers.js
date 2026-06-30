@@ -1,4 +1,4 @@
-export default { 
+export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
       return new Response(null, {
