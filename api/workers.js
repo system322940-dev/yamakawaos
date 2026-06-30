@@ -20,6 +20,7 @@ export default {
     try {
       const targetUrl = new URL(targetUrlStr);
       const originDomain = targetUrl.origin;
+
       const modifiedHeaders = new Headers(request.headers);
       modifiedHeaders.set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1");
       modifiedHeaders.set("Referer", originDomain);
@@ -33,16 +34,22 @@ export default {
 
       const contentType = response.headers.get("Content-Type") || "";
 
-      if (contentType.includes("text/html") || contentType.includes("application/javascript") || contentType.includes("application/json")) {
+      if (contentType.includes("text/html") || contentType.includes("application/javascript") || contentType.includes("application/json") || contentType.includes("text/javascript")) {
         let text = await response.text();
 
         const escapedOrigin = originDomain.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         const originRegex = new RegExp(escapedOrigin, 'g');
         text = text.replace(originRegex, `${currentUrl.origin}/?url=${originDomain}`);
-        
+
         if (contentType.includes("text/html")) {
           const baseTag = `<base href="${originDomain}/">`;
-          text = text.replace("<head>", `<head>${baseTag}`).replace("<HEAD>", `<HEAD>${baseTag}`);
+          if (text.includes("<head>")) {
+            text = text.replace("<head>", `<head>${baseTag}`);
+          } else if (text.includes("<HEAD>")) {
+            text = text.replace("<HEAD>", `<HEAD>${baseTag}`);
+          } else {
+            text = baseTag + text;
+          }
         }
 
         return new Response(text, {
