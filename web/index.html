@@ -420,10 +420,10 @@
 
         <div id="browser-window" class="window hidden" style="width: 340px; height: 400px; top: 40px; left: 40px;">
             <div class="window-header">
-                <span class="window-title">やまかわブラウザ</span>
+                <span class="window-title" id="browser-title">やまかわブラウザ</span>
                 <button class="window-close" id="close-browser">✕</button>
             </div>
-            <div class="browser-toolbar">
+            <div class="browser-toolbar" id="browser-bar">
                 <button id="browser-back">←</button>
                 <input type="text" id="browser-url" value="https://www.youtube.com/@YamakawaTeruki">
                 <button id="browser-go">移動</button>
@@ -526,6 +526,8 @@
         const browserIcon = document.getElementById('browser-icon');
         const browserWindow = document.getElementById('browser-window');
         const closeBrowser = document.getElementById('close-browser');
+        const browserTitle = document.getElementById('browser-title');
+        const browserBar = document.getElementById('browser-bar');
         const browserUrl = document.getElementById('browser-url');
         const browserGo = document.getElementById('browser-go');
         const browserBack = document.getElementById('browser-back');
@@ -702,13 +704,16 @@
             e.stopPropagation();
             browserWindow.classList.remove('hidden');
             bringToFront(browserWindow);
-            if (!browserIframe.src) loadUrl(defaultUrl);
+            if (!browserIframe.src) loadUrl(browserUrl.value.trim() || defaultUrl);
         });
-        closeBrowser.addEventListener('click', () => browserWindow.classList.add('hidden'));
+        closeBrowser.addEventListener('click', () => {
+            browserIframe.src = "";
+            browserWindow.classList.add('hidden');
+        });
         menuBrowser.addEventListener('click', () => {
             browserWindow.classList.remove('hidden');
             bringToFront(browserWindow);
-            if (!browserIframe.src) loadUrl(defaultUrl);
+            if (!browserIframe.src) loadUrl(browserUrl.value.trim() || defaultUrl);
             startMenu.classList.add('hidden');
         });
 
@@ -729,7 +734,14 @@
                 url = 'https://' + url;
             }
             browserUrl.value = url;
-            browserIframe.src = proxyApi + encodeURIComponent(url);
+
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                browserTitle.textContent = "YouTube専用ブラウザ - やまかわてるき";
+                browserIframe.src = "https://www.youtube.com/embed/videoseries?list=UUp_6bMvO_wDndp4Zpna-UuA";
+            } else {
+                browserTitle.textContent = "やまかわブラウザ";
+                browserIframe.src = proxyApi + encodeURIComponent(url);
+            }
         }
 
         browserGo.addEventListener('click', () => loadUrl(browserUrl.value.trim()));
@@ -751,6 +763,7 @@
             setTimeout(() => {
                 passwordInput.value = '';
                 loginError.textContent = '';
+                browserIframe.src = "";
                 desktopScreen.classList.add('hidden');
                 notepadWindow.classList.add('hidden');
                 browserWindow.classList.add('hidden');
