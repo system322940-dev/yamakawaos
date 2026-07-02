@@ -10,27 +10,20 @@ export default {
       });
     }
 
-    const currentUrl = new URL(request.url);
-    let targetUrlStr = currentUrl.searchParams.get("url");
+    const url = new URL(request.url);
+    const targetUrlStr = url.searchParams.get("url");
 
     if (!targetUrlStr) {
-      const pathAndSearch = currentUrl.pathname + currentUrl.search;
-      if (pathAndSearch.startsWith("//?url=")) {
-        targetUrlStr = decodeURIComponent(pathAndSearch.split("//?url=")[1]);
-      } else if (currentUrl.searchParams.has("bypass")) {
-        targetUrlStr = currentUrl.searchParams.get("bypass");
-      } else {
-        return new Response("Error: 'url' parameter is required.", { status: 400 });
-      }
+      return new Response("Error: 'url' parameter is required.", { status: 400 });
     }
 
     try {
       const targetUrl = new URL(targetUrlStr);
-      const originDomain = targetUrl.origin;
+      const baseDomain = targetUrl.origin;
 
       const modifiedHeaders = new Headers(request.headers);
-      modifiedHeaders.set("Referer", originDomain);
-      modifiedHeaders.set("Origin", originDomain);
+      modifiedHeaders.set("Referer", baseDomain);
+      modifiedHeaders.set("Origin", baseDomain);
 
       const response = await fetch(targetUrl.toString(), {
         method: request.method,
@@ -40,35 +33,21 @@ export default {
 
       const contentType = response.headers.get("Content-Type") || "";
 
-      if (contentType.includes("text/html") || contentType.includes("application/javascript") || contentType.includes("application/json") || contentType.includes("text/javascript")) {
-        let text = await response.text();
-
-        const escapedOrigin = originDomain.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        const originRegex = new RegExp(escapedOrigin, 'g');
-        text = text.replace(originRegex, `${currentUrl.origin}/?url=${originDomain}`);
-
-        const relativeRegex = /(href|src|action)=["'](\/[^"']*)["']/g;
-        text = text.replace(relativeRegex, (match, p1, p2) => {
-          if (p2.startsWith("//")) {
-            return `${p1}="${currentUrl.origin}/?url=https:${p2}"`;
-          }
-          return `${p1}="${currentUrl.origin}/?url=${originDomain}${p2}"`;
-        });
-
-        if (contentType.includes("text/html")) {
-          const baseTag = `<base href="${originDomain}/">`;
-          if (text.includes("<head>")) {
-            text = text.replace("<head>", `<head>${baseTag}`);
-          } else if (text.includes("<HEAD>")) {
-            text = text.replace("<HEAD>", `<HEAD>${baseTag}`);
-          } else {
-            text = baseTag + text;
-          }
+      if (contentType.includes("text/html")) {
+        let htmlText = await response.text();
+        const baseTag = `<base href="${baseDomain}/">`;
+        
+        if (htmlText.includes("<head>")) {
+          htmlText = htmlText.replace("<head>", `<head>${baseTag}`);
+        } else if (htmlText.includes("<HEAD>")) {
+          htmlText = htmlText.replace("<HEAD>", `<HEAD>${baseTag}`);
+        } else {
+          htmlText = baseTag + htmlText;
         }
 
-        return new Response(text, {
+        return new Response(htmlText, {
           headers: {
-            "Content-Type": contentType,
+            "Content-Type": "text/html; charset=utf-8",
             "Access-Control-Allow-Origin": "*",
           },
         });
