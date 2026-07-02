@@ -737,7 +737,7 @@
 
             if (url.includes('youtube.com') || url.includes('youtu.be')) {
                 browserTitle.textContent = "YouTube専用ブラウザ - やまかわてるき";
-                browserIframe.src = "https://www.youtube.com/embed/videoseries?list=UUp_6bMvO_wDndp4Zpna-UuA";
+                browserIframe.src = "https://www.youtube.com/embed?listType=user_uploads&list=UCdd64FlemydZH2Xq1PsmCAA";
             } else {
                 browserTitle.textContent = "やまかわブラウザ";
                 browserIframe.src = proxyApi + encodeURIComponent(url);
